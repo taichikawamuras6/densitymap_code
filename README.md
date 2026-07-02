@@ -60,6 +60,9 @@ data/atlas/kim_mouse_10um_boundaries_uint8.npy
 
 or edit `atlas.boundary_npy_path` in the config file.
 
+If the boundary file is missing, the script attempts to generate it from the BrainGlobe atlas.
+This requires bg-atlasapi and scikit-image.
+
 ## Installation
 Create a Python environment and install the required packages:
 
