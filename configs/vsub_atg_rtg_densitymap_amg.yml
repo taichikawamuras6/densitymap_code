@@ -37,7 +37,7 @@ columns:
 densmap:
   # This preserves the original smoothed voxel-histogram workflow for this dataset.
   # Change to "kde" only if that is the final method used in the manuscript.
-  method: "kde"  # "kde" or "histogram"
+  method: "histogram"  # "kde" or "histogram"
   kde_cutoff_sigma: 3.0
   coarse_voxel_um:
     xy: 50
