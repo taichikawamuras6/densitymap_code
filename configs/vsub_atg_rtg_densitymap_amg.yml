@@ -1,0 +1,78 @@
+# Config for conventional vSUB anterograde/retrograde tracing density maps.
+# Edit input.paths and atlas.boundary_npy_path before running on your full dataset.
+
+input:
+  paths:
+    - "data/qupath_exports/676_vsub_atg_rtg_amg_region.tsv"
+    - "data/qupath_exports/677_vsub_atg_rtg_amg_region.tsv"
+    - "data/qupath_exports/1092_vsub_atg_rtg_amg_region.tsv"
+    - "data/qupath_exports/1091_vsub_atg_rtg_amg_region.tsv"
+    # - "data/your_other_sample.tsv"
+
+
+output:
+  root_dir: "outputs"
+  run_tag: "vsub_atg_rtg_densitymap_amg"
+
+atlas:
+  # TODO: place the binary atlas-boundary volume here, or edit this path.
+  boundary_npy_path: "data/atlas/kim_mouse_10um_boundaries_uint8.npy"
+  flip_x: false
+  flip_y: true
+  z_selection:
+    start: 605
+    stop: 
+    step: 10
+
+columns:
+  # QuPath/ABBA-exported column names are kept unchanged.
+  x: "Atlas_X"
+  y: "Atlas_Y"
+  z: "Atlas_Z"
+  unit_factor: 1000.0
+  object_type: "Object type"
+  classification: "Classification"
+  name: "Name"
+
+densmap:
+  # This preserves the original smoothed voxel-histogram workflow for this dataset.
+  # Change to "kde" only if that is the final method used in the manuscript.
+  method: "kde"  # "kde" or "histogram"
+  kde_cutoff_sigma: 3.0
+  coarse_voxel_um:
+    xy: 50
+    z: 300
+  bandwidth_um:
+    xy: 75
+    z: 450
+  contour_quantiles: [0.99]
+  lw: 0.8
+  pooled:
+    enabled: true
+    pool_norm_method: "sum"
+
+layer_defs:
+  ATG_label:
+    kind: "densmap"
+    object_type: "Tile"
+    weight:
+      mode: "auto_intensity"
+      # If auto-detection fails, uncomment and set the exact QuPath column:
+      # column: "ROI: 0.45 µm per pixel: Cy3: Mean"
+    color: "magenta"
+    fill: true
+
+  RTG_label:
+    kind: "densmap"
+    object_type: "Cell"
+    filter:
+      classification_equals: "AF488"
+    weight:
+      mode: "count"
+    color: "lime"
+    fill: true
+
+layers:
+  - "ATG_label"
+  - "RTG_label"
+

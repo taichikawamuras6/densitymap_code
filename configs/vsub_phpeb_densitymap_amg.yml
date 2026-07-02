@@ -1,0 +1,64 @@
+# Config for vSUB dsATT-PHPeB label density maps.
+# Edit input.paths and atlas.boundary_npy_path before running on your full dataset.
+
+input:
+  paths:
+    - "data/qupath_exports/1123_vsub_phpeb_amg_region.tsv"
+    - "data/qupath_exports/1124_vsub_phpeb_amg_region.tsv"
+    - "data/qupath_exports/1125_vsub_phpeb_amg_region.tsv"
+    # - "data/your_other_sample.tsv"
+
+output:
+  root_dir: "outputs"
+  run_tag: "vsub_phpeb_densitymap_ang"
+
+atlas:
+  # TODO: place the binary atlas-boundary volume here, or edit this path.
+  boundary_npy_path: "data/atlas/kim_mouse_10um_boundaries_uint8.npy"
+  flip_x: false
+  flip_y: true
+  z_selection:
+    start: 605
+    stop: 805
+    step: 10
+
+columns:
+  # QuPath/ABBA-exported column names are kept unchanged.
+  x: "Atlas_X"
+  y: "Atlas_Y"
+  z: "Atlas_Z"
+  unit_factor: 1000.0
+  object_type: "Object type"
+  classification: "Classification"
+  name: "Name"
+
+densmap:
+  method: "kde"  # "kde" or "histogram"
+  kde_cutoff_sigma: 3.0
+  coarse_voxel_um:
+    xy: 50
+    z: 300
+  bandwidth_um:
+    xy: 75
+    z: 450
+  contour_quantiles: [0.99]
+  lw: 0.8
+  pooled:
+    enabled: true
+    pool_norm_method: "sum"
+
+layer_defs:
+  ATG-TS_label:
+    kind: "densmap"
+    object_type: "Cell"
+    filter:
+      classification_equals: "Cy3"
+    weight:
+      mode: "count"
+    color: "lime"
+    fill: true
+
+
+layers:
+  - "ATG-TS_label"
+
