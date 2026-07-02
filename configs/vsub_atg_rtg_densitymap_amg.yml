@@ -16,6 +16,7 @@ output:
 
 atlas:
   # TODO: place the binary atlas-boundary volume here, or edit this path.
+  name: "kim_mouse_10um"
   boundary_npy_path: "data/atlas/kim_mouse_10um_boundaries_uint8.npy"
   flip_x: false
   flip_y: true
