@@ -37,6 +37,47 @@ def load_config(path: Path) -> dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
+def compute_boundary_volume_from_annotation(annotation: np.ndarray) -> np.ndarray:
+    """Create a binary atlas-boundary volume from an annotation volume."""
+    from skimage.segmentation import find_boundaries
+
+    boundary = np.zeros(annotation.shape, dtype=np.uint8)
+    for z in range(annotation.shape[0]):
+        boundary[z] = find_boundaries(annotation[z], mode="inner").astype(np.uint8)
+    return boundary
+
+
+def load_or_build_boundary_volume(boundary_path: Path, atlas_name: str = "kim_mouse_10um"):
+    """
+    Load atlas boundary volume if available.
+    If not available, try to build it from the BrainGlobe atlas annotation.
+    If this also fails, return None.
+    """
+    if boundary_path.exists():
+        print(f"[INFO] Loaded atlas boundary volume: {boundary_path}")
+        return np.load(boundary_path)
+
+    print(f"[WARN] Atlas boundary volume not found: {boundary_path}")
+    print(f"[INFO] Trying to build boundary volume from BrainGlobe atlas: {atlas_name}")
+
+    try:
+        from bg_atlasapi import BrainGlobeAtlas
+
+        atlas = BrainGlobeAtlas(atlas_name)
+        annotation = atlas.annotation
+        boundary = compute_boundary_volume_from_annotation(annotation)
+
+        boundary_path.parent.mkdir(parents=True, exist_ok=True)
+        np.save(boundary_path, boundary)
+
+        print(f"[INFO] Built and saved atlas boundary volume: {boundary_path}")
+        return boundary
+
+    except Exception as e:
+        print("[WARN] Could not build atlas boundary volume automatically.")
+        print(f"[WARN] Reason: {e}")
+        print("[WARN] Density maps will be generated without atlas boundaries.")
+        return None
 
 def read_table(path: Path) -> pd.DataFrame:
     suffix = path.suffix.lower()
@@ -495,7 +536,10 @@ def render_outputs(
 
     for z_fine in z_values:
         zc = coarse_z_from_fine_z(z_fine, coarse_z_count, cfg)
-        boundary2d = boundary_volume[z_fine]
+        if boundary_volume is not None:
+            boundary2d = boundary_volume[z_index]
+        else:
+            boundary2d = None
 
         kde_layers = []
         for layer in dens_layers:
@@ -589,11 +633,11 @@ def main() -> None:
     config_path = Path(args.config)
     cfg = load_config(config_path)
 
-    boundary_path = Path(cfg["atlas"]["boundary_npy_path"])
+    atlas_name = config.get("atlas", {}).get("name", "kim_mouse_10um")
+    boundary_volume = load_or_build_boundary_volume(boundary_path, atlas_name=atlas_name)
+  
     output_dir = Path(cfg["output"]["root_dir"]) / str(cfg["output"].get("run_tag", "densitymap_output"))
     output_dir.mkdir(parents=True, exist_ok=True)
-
-    boundary_volume = np.load(boundary_path)
 
     input_paths = [Path(p) for p in cfg["input"]["paths"]]
     sample_volumes = [
