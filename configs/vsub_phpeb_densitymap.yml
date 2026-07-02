@@ -33,7 +33,7 @@ columns:
   name: "Name"
 
 densmap:
-  method: "kde"  # "kde" or "histogram"
+  method: "histogram"  # "kde" or "histogram"
   kde_cutoff_sigma: 3.0
   coarse_voxel_um:
     xy: 50
